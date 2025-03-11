@@ -2,30 +2,34 @@ name: CICD
 
 on:
   push:
-    branches: main
+    branches:
+      - main # This triggers the workflow on pushes to the main branch
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-
       - name: Checkout source
         uses: actions/checkout@v3
 
-      - name: Setup Java
+      - name: Set up Java
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Build Project
-        run: mvn clean install -DskipTests
+      - name: Cache Maven dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('demo/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
 
-      - name: Build Docker image
-        run: docker build -t integrationninjas/springboot-example .
-
-      - name: Login to Docker Hub using Access Token
-        run: echo ${{ secrets.DOCKER_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-
-      - name: Push Docker image to Docker Hub
-        run: docker push integrationninjas/springboot-example:latest
+      - name: Build and push Docker image with Jib
+        run: |
+          echo "Logging into Docker..."
+          echo ${{ secrets.DOCKER_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          echo "Building and pushing Docker image..."
+          mvn clean install -DskipTests jib:build -f ./demo/pom.xml
+        working-directory: ./demo
