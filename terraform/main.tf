@@ -39,7 +39,7 @@ resource "aws_route_table" "routedb" {
 # Public Subnets group
 
 resource "aws_db_subnet_group" "heapoverflow_db_subnet_group" {
-  name       = "aws_subnet_group_heapoverflow_db"
+  name       = "aws_subnet_group_heapoverflow"
   subnet_ids = [aws_subnet.subnet_a.id, aws_subnet.subnet_b.id]
 }
 
@@ -100,3 +100,53 @@ resource "aws_db_instance" "heapoverflow_instance" {
   vpc_security_group_ids = [aws_security_group.allow_tls.id]
 }
 
+
+# EC2
+
+resource "aws_security_group" "ec2_sg" {
+  name        = "ec2_sg"
+  description = "Allow app traffic"
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+
+resource "aws_instance" "springboot_app" {
+  ami                    = "ami-07fa5275316057f54"  # Update with the correct AMI ID
+  instance_type          = "t3.micro"
+  security_groups        = [aws_security_group.ec2_sg.name]
+  user_data = <<-EOF
+              #!/bin/bash
+              # Update packages and install Docker
+              sudo yum update -y
+              sudo amazon-linux-extras install docker
+              sudo service docker start
+              sudo usermod -a -G docker ec2-user
+
+              # Enable Docker service to start on boot
+              sudo systemctl enable docker
+
+              # Install Git (if needed for the repo)
+              sudo yum install -y git
+
+              # Pull Docker image from Docker Hub
+              docker pull your-dockerhub-username/demo-app:latest
+
+              # Stop and remove any existing container (if it exists)
+              docker stop springboot-app || true
+              docker rm springboot-app || true
+
+              # Run the Docker container
+              docker run -d -p 8080:8080 --name springboot-app your-dockerhub-username/demo-app:latest
+              EOF
+}
