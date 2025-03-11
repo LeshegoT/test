@@ -32,4 +32,3 @@ jobs:
           echo ${{ secrets.DOCKER_ACCESS_TOKEN }} | docker login -u ${{ vars.DOCKER_USERNAME }} --password-stdin
           echo "Building and pushing Docker image..."
           mvn clean install -DskipTests jib:build -f ./demo/pom.xml
-        working-directory: ./demo
