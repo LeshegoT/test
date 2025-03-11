@@ -3,7 +3,7 @@ name: CICD
 on:
   push:
     branches:
-      - main # This triggers the workflow on pushes to the main branch
+      - main 
 
 jobs:
   build:
