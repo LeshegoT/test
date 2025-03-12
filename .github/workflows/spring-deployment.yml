@@ -47,7 +47,7 @@ jobs:
       - name: Pull Image from Docker Hub
         run: docker pull ${{ vars.DOCKER_USERNAME }}/demo-app:latest
       
-      - name: Delete old container
+      - name: Delete old containers
         run: docker rm -f springboot-example-container || true
       
       - name: Run Docker container
