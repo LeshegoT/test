@@ -39,3 +39,16 @@ jobs:
 
       - name: Push Docker image to Docker Hub
         run: docker push ${{ vars.DOCKER_USERNAME }}/demo-app:latest
+    
+  deploy:
+    needs: build
+    runs-on: [ec2-runner]
+    steps:
+      - name: Pull Image from Docker Hub
+        run: docker pull ${{ vars.DOCKER_USERNAME }}/demo-app:latest
+      
+      - name: Delete old container
+        run: docker rm -f springboot-example-container || true
+      
+      - name: Run Docker container
+        run: docker run -d -p 8080:8080 --name springboot-example-container ${{ vars.DOCKER_USERNAME }}/demo-app:latest
