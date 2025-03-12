@@ -12,7 +12,6 @@ public class DemoApplication {
 	public String getMessage(){
 		return "Welcome to java Docker";
 	}
-
 	public static void main(String[] args) {SpringApplication.run(DemoApplication.class, args);
 	}
 
